@@ -1,0 +1,65 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+            "appName": {
+                "type": "string",
+                "metadata": {
+                    "description": "The name of the web app that you wish to create. All resources will use this name"
+                }
+            }    
+    },
+	"variables": {
+		"subscriptionIdProd": "d453c083-6d8e-4772-9486-c703cc1830c1",
+		"subscriptionIdDev": "d453c083-6d8e-4772-9486-c703cc1830c1",
+		"priLocation": "UK West",
+		"secLocation": "UK South",
+		"unsupportedLocation": "West Europe",
+		"prodEnv": "prod",
+		"stageEnv": "stage",
+		"devEnv": "dev",
+		"resourceGroupName": "[concat('mfrs',parameters('appName'))]",
+		"appServiceName": "[concat('mfrs',parameters('appName'),'App')]",
+		"appServicePlanName": "[concat('mfrs',parameters('appName'),'AppService')]",
+		"appServicePlanSKU": "Standard",
+		"appServicePlanSKUcode": "S1"
+	},
+	"resources": [
+        {
+            "apiVersion": "2016-03-01",
+            "name": "[variables('appServiceName')]",
+            "type": "Microsoft.Web/sites",
+            "properties": {
+                "name": "[variables('appServiceName')]",
+                "siteConfig": {
+                    "appSettings": []
+                },
+                "serverFarmId": "[concat('/subscriptions/', variables('subscriptionIdProd'),'/resourceGroups/', variables('resourceGroupName'), '/providers/Microsoft.Web/serverfarms/', variables('appServicePlanName'))]",
+                "hostingEnvironment": ""
+            },
+            "location": "[variables('priLocation')]",
+            "dependsOn": [
+                "[concat('Microsoft.Web/serverfarms/', variables('appServicePlanName'))]"
+            ]
+        },
+		{
+            "apiVersion": "2015-08-01",
+            "name": "[variables('appServicePlanName')]",
+            "type": "Microsoft.Web/serverfarms",
+            "location": "[variables('priLocation')]",
+            "properties": {
+                "name": "[variables('appServicePlanName')]",
+				"workerSizeId": "0",
+				"reserved": false,
+				"numberOfWorkers": "1",
+                "hostingEnvironmentProfile": {
+                     "id": "[resourceId('Microsoft.Web/hostingEnvironments',variables('appServicePlanName'))]"
+                }
+            },
+            "sku": {
+                "name" : "[variables('appServicePlanSKUcode')]",
+                "tier": "[variables('appServicePlanSKU')]"
+            }
+        }
+    ]
+}
