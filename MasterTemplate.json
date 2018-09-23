@@ -22,7 +22,11 @@
 		"appServiceName": "[concat('mfrs',parameters('appName'),'App')]",
 		"appServicePlanName": "[concat('mfrs',parameters('appName'),'AppService')]",
 		"appServicePlanSKU": "Standard",
-		"appServicePlanSKUcode": "S1"
+		"appServicePlanSKUcode": "S1",
+		"appServiceSlots": [
+			"dev",
+			"stage"
+		]
 	},
 	"resources": [
         {
@@ -60,6 +64,23 @@
                 "name" : "[variables('appServicePlanSKUcode')]",
                 "tier": "[variables('appServicePlanSKU')]"
             }
-        }
+        },
+		{
+			"apiVersion": "2016-08-01",
+			"type": "Microsoft.Web/sites/slots",
+			"name": "[concat(variables('appServiceName'), '/', variables('appServiceSlots')[copyIndex()])]",
+			"location": "[variables('priLocation')]",
+			"properties": {
+                "serverFarmId": "[concat('/subscriptions/', variables('subscriptionIdProd'),'/resourceGroups/', variables('resourceGroupName'), '/providers/Microsoft.Web/serverfarms/', variables('appServicePlanName'))]"
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
+			],
+			"copy": {
+				"name": "webPortalSlot",
+				"count": "[length(variables('appServiceSlots'))]"
+			}		
+			
+		}
     ]
 }
