@@ -55,10 +55,7 @@
                 "name": "[variables('appServicePlanName')]",
 				"workerSizeId": "0",
 				"reserved": false,
-				"numberOfWorkers": "1",
-                "hostingEnvironmentProfile": {
-                     "id": "[resourceId('Microsoft.Web/hostingEnvironments',variables('appServicePlanName'))]"
-                }
+				"numberOfWorkers": "1"
             },
             "sku": {
                 "name" : "[variables('appServicePlanSKUcode')]",
@@ -74,7 +71,8 @@
                 "serverFarmId": "[concat('/subscriptions/', variables('subscriptionIdProd'),'/resourceGroups/', variables('resourceGroupName'), '/providers/Microsoft.Web/serverfarms/', variables('appServicePlanName'))]"
 			},
 			"dependsOn": [
-				"[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
+				"[concat('/subscriptions/', variables('subscriptionIdProd'),'/resourceGroups/', variables('resourceGroupName'), '/providers/Microsoft.Web/serverfarms/', variables('appServicePlanName'))]",
+				"[resourceId('Microsoft.Web/sites',variables('appServiceName'))]"
 			],
 			"copy": {
 				"name": "webPortalSlot",
