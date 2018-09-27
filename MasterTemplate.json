@@ -2,6 +2,14 @@
 	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
 	"contentVersion": "1.0.0.0",
 	"parameters": {
+			"ResourceGroupType": {
+				"type": "string",
+				"allowedValues": [
+					"-prod-rg",
+					"-stage-rg",
+					"-dev-rg"
+				]
+			},
 			"appServiceOption": {
 				"type": "string",
 				"allowedValues": [
@@ -32,20 +40,17 @@
 		"priLocation": "UK West",
 		"secLocation": "UK South",
 		"unsupportedLocation": "West Europe",
-		"prodEnv": "prod",
-		"stageEnv": "stage",
-		"devEnv": "dev",
-		"resourceGroupName": "[concat(resourceGroup().name)]",
-		"appServiceName": "[concat(resourceGroup().name,'App')]",
-		"appServicePlanName": "[concat(resourceGroup().name,'AppService')]",
+		"resourceGroupName": "[concat(resourceGroup().name, parameters('ResourceGroupType'))]",
+		"appServiceName": "[concat(resourceGroup().name,'App', parameters('ResourceGroupType'))]",
+		"appServicePlanName": "[concat(resourceGroup().name,'AppService', parameters('ResourceGroupType'))]",
 		"appServicePlanSKU": "Standard",
 		"appServicePlanSKUcode": "S1",
 		"appServiceSlots": [
 			"dev",
 			"stage"
 		],
-		"sqlServerName": "[toLower(concat(resourceGroup().name,'sqlserver'))]",
-		"sqlDatabaseName": "[concat(resourceGroup().name,'SqlDatabase')]"
+		"sqlServerName": "[toLower(concat(resourceGroup().name,'sqlserver', parameters('ResourceGroupType')))]",
+		"sqlDatabaseName": "[concat(resourceGroup().name,'SqlDatabase', parameters('ResourceGroupType'))]"
 	},
 	"resources": [
         {
