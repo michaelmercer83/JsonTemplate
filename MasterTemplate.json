@@ -7,7 +7,14 @@
                 "metadata": {
                     "description": "The name of the web app that you wish to create. All resources will use this name"
                 }
-            }    
+            },
+			"sqlAdministratorLogin": {
+				"type": "string"
+			},
+			"sqlAdministratorLoginPass": {
+				"type": "securestring"
+			}
+			
     },
 	"variables": {
 		"subscriptionIdProd": "d453c083-6d8e-4772-9486-c703cc1830c1",
@@ -26,7 +33,9 @@
 		"appServiceSlots": [
 			"dev",
 			"stage"
-		]
+		],
+		"sqlServerName": "[toLower(concat('mfrs',parameters('appName'),'sqlserver'))]",
+		"sqlDatabaseName": "[concat('mfrs',parameters('appName'),'SqlDatabase')]"
 	},
 	"resources": [
         {
@@ -71,14 +80,54 @@
                 "serverFarmId": "[concat('/subscriptions/', variables('subscriptionIdProd'),'/resourceGroups/', variables('resourceGroupName'), '/providers/Microsoft.Web/serverfarms/', variables('appServicePlanName'))]"
 			},
 			"dependsOn": [
-				"[concat('/subscriptions/', variables('subscriptionIdProd'),'/resourceGroups/', variables('resourceGroupName'), '/providers/Microsoft.Web/serverfarms/', variables('appServicePlanName'))]",
+				"[concat('Microsoft.Web/serverfarms/', variables('appServicePlanName'))]",
 				"[resourceId('Microsoft.Web/sites',variables('appServiceName'))]"
 			],
 			"copy": {
 				"name": "webPortalSlot",
 				"count": "[length(variables('appServiceSlots'))]"
 			}		
+		},
+		{
+			"name": "[variables('sqlServerName')]",
+			"type": "Microsoft.Sql/servers",
+			"apiVersion": "2014-04-01-preview",
+			"location": "[variables('priLocation')]",
+			"properties": {
+				"administratorLogin": "[parameters('sqlAdministratorLogin')]",
+				"administratorLoginPassword": "[parameters('sqlAdministratorLoginPass')]"
+			},
+			"resources": [
+				{
+				  "name": "[variables('sqlDatabaseName')]",
+				  "type": "databases",
+				  "location": "[variables('priLocation')]",
+				  "apiVersion": "2015-01-01",
+				  "dependsOn": [
+					"[variables('sqlServerName')]"
+				  ],
+				  "properties": {
+					"edition": "Basic",
+					"requestedServiceObjectiveName": "Basic"
+				  }
+				},
+				{
+				  "type": "firewallrules",
+				  "apiVersion": "2014-04-01",
+				  "dependsOn": [
+					"[variables('sqlServerName')]"
+				  ],
+				  "location": "[variables('priLocation')]",
+				  "name": "AllowAllWindowsAzureIps",
+				  "properties": {
+					"endIpAddress": "0.0.0.0",
+					"startIpAddress": "0.0.0.0"
+				  }
+				}
+			]
 			
 		}
+	  
+		
     ]
 }
