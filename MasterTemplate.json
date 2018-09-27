@@ -29,7 +29,7 @@
 					"No"
 				],
 				"defaultValue": "No"
-			},
+			}
 
     },
 	"variables": {
@@ -55,6 +55,7 @@
 	},
 	"resources": [
         {
+			"condition": "[equals(parameters('appServiceOption'), 'Yes')]",
             "apiVersion": "2016-03-01",
             "name": "[variables('appServiceName')]",
             "type": "Microsoft.Web/sites",
@@ -72,6 +73,7 @@
             ]
         },
 		{
+			"condition": "[equals(parameters('appServiceOption'), 'Yes')]",
             "apiVersion": "2015-08-01",
             "name": "[variables('appServicePlanName')]",
             "type": "Microsoft.Web/serverfarms",
@@ -88,6 +90,7 @@
             }
         },
 		{
+			"condition": "[equals(parameters('appServiceOption'), 'Yes')]",
 			"apiVersion": "2016-08-01",
 			"type": "Microsoft.Web/sites/slots",
 			"name": "[concat(variables('appServiceName'), '/', variables('appServiceSlots')[copyIndex()])]",
