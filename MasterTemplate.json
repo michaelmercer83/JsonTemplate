@@ -13,8 +13,24 @@
 			},
 			"sqlAdministratorLoginPass": {
 				"type": "securestring"
-			}
-			
+			},
+			"appServiceOption": {
+				"type": "string",
+				"allowedValues": [
+					"Yes",
+					"No"
+				],
+				"defaultValue": "No"
+			},
+			"sqlServerOption": {
+				"type": "string",
+				"allowedValues": [
+					"Yes",
+					"No"
+				],
+				"defaultValue": "No"
+			},
+
     },
 	"variables": {
 		"subscriptionIdProd": "d453c083-6d8e-4772-9486-c703cc1830c1",
@@ -89,6 +105,7 @@
 			}		
 		},
 		{
+			"condition": "[equals(parameters('sqlServerOption'), 'Yes')]",
 			"name": "[variables('sqlServerName')]",
 			"type": "Microsoft.Sql/servers",
 			"apiVersion": "2014-04-01-preview",
@@ -99,6 +116,7 @@
 			},
 			"resources": [
 				{
+				  "condition": "[equals(parameters('sqlServerOption'), 'Yes')]",
 				  "name": "[variables('sqlDatabaseName')]",
 				  "type": "databases",
 				  "location": "[variables('priLocation')]",
@@ -112,6 +130,7 @@
 				  }
 				},
 				{
+				"condition": "[equals(parameters('sqlServerOption'), 'Yes')]",
 				  "type": "firewallrules",
 				  "apiVersion": "2014-04-01",
 				  "dependsOn": [
@@ -125,7 +144,6 @@
 				  }
 				}
 			]
-			
 		}
 	  
 		
