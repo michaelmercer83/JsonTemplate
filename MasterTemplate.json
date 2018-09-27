@@ -2,18 +2,6 @@
 	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
 	"contentVersion": "1.0.0.0",
 	"parameters": {
-            "appName": {
-                "type": "string",
-                "metadata": {
-                    "description": "The name of the web app that you wish to create. All resources will use this name"
-                }
-            },
-			"sqlAdministratorLogin": {
-				"type": "string"
-			},
-			"sqlAdministratorLoginPass": {
-				"type": "securestring"
-			},
 			"appServiceOption": {
 				"type": "string",
 				"allowedValues": [
@@ -29,6 +17,12 @@
 					"No"
 				],
 				"defaultValue": "No"
+			},
+			"sqlAdministratorLogin": {
+				"type": "string"
+			},
+			"sqlAdministratorLoginPass": {
+				"type": "securestring"
 			}
 
     },
@@ -41,17 +35,17 @@
 		"prodEnv": "prod",
 		"stageEnv": "stage",
 		"devEnv": "dev",
-		"resourceGroupName": "[concat('mfrs',parameters('appName'))]",
-		"appServiceName": "[concat('mfrs',parameters('appName'),'App')]",
-		"appServicePlanName": "[concat('mfrs',parameters('appName'),'AppService')]",
+		"resourceGroupName": "[concat(resourceGroup().name)]",
+		"appServiceName": "[concat(resourceGroup().name,'App')]",
+		"appServicePlanName": "[concat(resourceGroup().name,'AppService')]",
 		"appServicePlanSKU": "Standard",
 		"appServicePlanSKUcode": "S1",
 		"appServiceSlots": [
 			"dev",
 			"stage"
 		],
-		"sqlServerName": "[toLower(concat('mfrs',parameters('appName'),'sqlserver'))]",
-		"sqlDatabaseName": "[concat('mfrs',parameters('appName'),'SqlDatabase')]"
+		"sqlServerName": "[toLower(concat(resourceGroup().name,'sqlserver'))]",
+		"sqlDatabaseName": "[concat(resourceGroup().name,'SqlDatabase')]"
 	},
 	"resources": [
         {
@@ -64,7 +58,7 @@
                 "siteConfig": {
                     "appSettings": []
                 },
-                "serverFarmId": "[concat('/subscriptions/', variables('subscriptionIdProd'),'/resourceGroups/', variables('resourceGroupName'), '/providers/Microsoft.Web/serverfarms/', variables('appServicePlanName'))]",
+                "serverFarmId": "[concat('/subscriptions/', variables('subscriptionIdProd'),'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Web/serverfarms/', variables('appServicePlanName'))]",
                 "hostingEnvironment": ""
             },
             "location": "[variables('priLocation')]",
