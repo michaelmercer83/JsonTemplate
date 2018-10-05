@@ -8,9 +8,9 @@
 			"ResourceGroupType": {
 				"type": "string",
 				"allowedValues": [
-					"-prod",
-					"-stage",
-					"-dev"
+					"prod",
+					"stage",
+					"dev"
 				]
 			},
 			"appServiceOption": {
@@ -244,6 +244,7 @@
 							]
 						}
 					],
+                "outputs": {}
 				}
 			}
 	    }
