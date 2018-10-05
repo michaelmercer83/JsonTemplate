@@ -2,6 +2,9 @@
 	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
 	"contentVersion": "1.0.0.0",
 	"parameters": {
+			"resourceName": {
+				"type": "string"
+			},	
 			"ResourceGroupType": {
 				"type": "string",
 				"allowedValues": [
@@ -18,7 +21,7 @@
 				],
 				"defaultValue": "No"
 			},
-			"appServiceMobileOption: {
+			"appServiceMobileOption": {
 				"type": "string",
 				"allowedValues": [
 					"Yes",
@@ -48,176 +51,202 @@
 		"priLocation": "UK West",
 		"secLocation": "UK South",
 		"unsupportedLocation": "West Europe",
-		"resourceGroupName": "[concat(resourceGroup().name, '-', parameters('ResourceGroupType'), '-rg')]",
-		"appServiceMobileName": "[concat(resourceGroup().name,'mobileapp', parameters('ResourceGroupType'))]",
-		"appServiceMobilePlanName": "[concat(resourceGroup().name,'mobileasp', parameters('ResourceGroupType'))]",
+		"resourceGroupName": "[concat(parameters('resourceName'), '-', parameters('ResourceGroupType'), '-rg')]",
+		"appServiceMobileName": "[concat(parameters('resourceName'),'mobileapp', parameters('ResourceGroupType'))]",
+		"appServiceMobilePlanName": "[concat(parameters('resourceName'),'mobileasp', parameters('ResourceGroupType'))]",
 		"appServiceMobilePlanSKU": "Standard",
 		"appServiceMobilePlanSKUcode": "S1",
 		"appServiceMobileSlots": [
 			"lastknowngood",
 			"staging"
 		],
-		"appServiceName": "[concat(resourceGroup().name,'app', parameters('ResourceGroupType'))]",
-		"appServicePlanName": "[concat(resourceGroup().name,'asp', parameters('ResourceGroupType'))]",
+		"appServiceName": "[concat(parameters('resourceName'),'app', parameters('ResourceGroupType'))]",
+		"appServicePlanName": "[concat(parameters('resourceName'),'asp', parameters('ResourceGroupType'))]",
 		"appServicePlanSKU": "Standard",
 		"appServicePlanSKUcode": "S1",
 		"appServiceSlots": [
 			"lastknowngood",
 			"staging"
 		],
-		"sqlServerName": "[toLower(concat(resourceGroup().name,'sqlsvr', parameters('ResourceGroupType')))]",
-		"sqlDatabaseName": "[toLower(concat(resourceGroup().name,'sqlsvrdb', parameters('ResourceGroupType')))]"
+		"sqlServerName": "[toLower(concat(parameters('resourceName'),'sqlsvr', parameters('ResourceGroupType')))]",
+		"sqlDatabaseName": "[toLower(concat(parameters('resourceName'),'sqlsvrdb', parameters('ResourceGroupType')))]"
 	},
 	"resources": [
         {
-			"condition": "[equals(parameters('appServiceOption'), 'Yes')]",
-            "apiVersion": "2016-03-01",
-            "name": "[variables('appServiceName')]",
-            "type": "Microsoft.Web/sites",
-            "properties": {
-                "name": "[variables('appServiceName')]",
-                "siteConfig": {
-                    "appSettings": []
-                },
-                "serverFarmId": "[concat('/subscriptions/', variables('subscriptionIdProd'),'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Web/serverfarms/', variables('appServicePlanName'))]",
-                "hostingEnvironment": ""
-            },
+            "type": "Microsoft.Resources/resourceGroups",
+            "apiVersion": "2018-05-01",
             "location": "[variables('priLocation')]",
+            "name": "[variables('resourceGroupName')]",
+            "properties": {}
+        },
+		{
+		    "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2017-05-10",
+            "name": "Deployment",
+            "resourceGroup": "[variables('resourceGroupName')]",
             "dependsOn": [
-                "[concat('Microsoft.Web/serverfarms/', variables('appServicePlanName'))]"
-            ]
-        },
-		{
-			"condition": "[equals(parameters('appServiceOption'), 'Yes')]",
-            "apiVersion": "2015-08-01",
-            "name": "[variables('appServicePlanName')]",
-            "type": "Microsoft.Web/serverfarms",
-            "location": "[variables('priLocation')]",
+                "[resourceId('Microsoft.Resources/resourceGroups/', variables('resourceGroupName'))]"
+            ],
             "properties": {
-                "name": "[variables('appServicePlanName')]",
-				"workerSizeId": "0",
-				"reserved": false,
-				"numberOfWorkers": "1"
-            },
-            "sku": {
-                "name" : "[variables('appServicePlanSKUcode')]",
-                "tier": "[variables('appServicePlanSKU')]"
-            }
-        },
-		{
-			"condition": "[equals(parameters('appServiceOption'), 'Yes')]",
-			"apiVersion": "2016-08-01",
-			"type": "Microsoft.Web/sites/slots",
-			"name": "[concat(variables('appServiceName'), '/', variables('appServiceSlots')[copyIndex()])]",
-			"location": "[variables('priLocation')]",
-			"properties": {
-                "serverFarmId": "[concat('/subscriptions/', variables('subscriptionIdProd'),'/resourceGroups/', variables('resourceGroupName'), '/providers/Microsoft.Web/serverfarms/', variables('appServicePlanName'))]"
-			},
-			"dependsOn": [
-				"[concat('Microsoft.Web/serverfarms/', variables('appServicePlanName'))]",
-				"[resourceId('Microsoft.Web/sites',variables('appServiceName'))]"
-			],
-			"copy": {
-				"name": "webPortalSlot",
-				"count": "[length(variables('appServiceSlots'))]"
-			}		
-		},
-		{
-			"condition": "[equals(parameters('appServiceMobileOption'), 'Yes')]",
-            "apiVersion": "2016-03-01",
-            "name": "[variables('appServiceMobileName')]",
-            "type": "Microsoft.Web/sites",
-			"kind": "mobileapp",
-            "properties": {
-                "name": "[variables('appServiceMobileName')]",
-                "siteConfig": {
-                    "appSettings": []
-                },
-                "serverFarmId": "[concat('/subscriptions/', variables('subscriptionIdProd'),'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Web/serverfarms/', variables('appServiceMobilePlanName'))]",
-                "hostingEnvironment": ""
-            },
-            "location": "[variables('priLocation')]",
-            "dependsOn": [
-                "[concat('Microsoft.Web/serverfarms/', variables('appServiceMobilePlanName'))]"
-            ]
-        },
-		{
-			"condition": "[equals(parameters('appServiceMobileOption'), 'Yes')]",
-            "apiVersion": "2015-08-01",
-            "name": "[variables('appServiceMobilePlanName')]",
-            "type": "Microsoft.Web/serverfarms",
-            "location": "[variables('priLocation')]",
-            "properties": {
-                "name": "[variables('appServiceMobilePlanName')]",
-				"workerSizeId": "0",
-				"reserved": false,
-				"numberOfWorkers": "1"
-            },
-            "sku": {
-                "name" : "[variables('appServiceMobilePlanSKUcode')]",
-                "tier": "[variables('appServiceMobilePlanSKU')]"
-            }
-        },
-		{
-			"condition": "[equals(parameters('appServiceMobileOption'), 'Yes')]",
-			"apiVersion": "2016-08-01",
-			"type": "Microsoft.Web/sites/slots",
-			"name": "[concat(variables('appServiceMobileName'), '/', variables('appServiceMobileSlots')[copyIndex()])]",
-			"location": "[variables('priLocation')]",
-			"properties": {
-                "serverFarmId": "[concat('/subscriptions/', variables('subscriptionIdProd'),'/resourceGroups/', variables('resourceGroupName'), '/providers/Microsoft.Web/serverfarms/', variables('appServiceMobilePlanName'))]"
-			},
-			"dependsOn": [
-				"[concat('Microsoft.Web/serverfarms/', variables('appServiceMobilePlanName'))]",
-				"[resourceId('Microsoft.Web/sites',variables('appServiceMobileName'))]"
-			],
-			"copy": {
-				"name": "webPortalSlot",
-				"count": "[length(variables('appServiceMobileSlots'))]"
-			}		
-		},
-		{
-			"condition": "[equals(parameters('sqlServerOption'), 'Yes')]",
-			"name": "[variables('sqlServerName')]",
-			"type": "Microsoft.Sql/servers",
-			"apiVersion": "2014-04-01-preview",
-			"location": "[variables('priLocation')]",
-			"properties": {
-				"administratorLogin": "[parameters('sqlAdministratorLogin')]",
-				"administratorLoginPassword": "[parameters('sqlAdministratorLoginPass')]"
-			},
-			"resources": [
-				{
-				  "condition": "[equals(parameters('sqlServerOption'), 'Yes')]",
-				  "name": "[variables('sqlDatabaseName')]",
-				  "type": "databases",
-				  "location": "[variables('priLocation')]",
-				  "apiVersion": "2015-01-01",
-				  "dependsOn": [
-					"[variables('sqlServerName')]"
-				  ],
-				  "properties": {
-					"edition": "Basic",
-					"requestedServiceObjectiveName": "Basic"
-				  }
-				},
-				{
-				"condition": "[equals(parameters('sqlServerOption'), 'Yes')]",
-				  "type": "firewallrules",
-				  "apiVersion": "2014-04-01",
-				  "dependsOn": [
-					"[variables('sqlServerName')]"
-				  ],
-				  "location": "[variables('priLocation')]",
-				  "name": "AllowAllWindowsAzureIps",
-				  "properties": {
-					"endIpAddress": "0.0.0.0",
-					"startIpAddress": "0.0.0.0"
-				  }
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "variables": {},
+                    "resources": [
+						{
+							"condition": "[equals(parameters('appServiceOption'), 'Yes')]",
+							"apiVersion": "2016-03-01",
+							"name": "[variables('appServiceName')]",
+							"type": "Microsoft.Web/sites",
+							"properties": {
+								"name": "[variables('appServiceName')]",
+								"siteConfig": {
+									"appSettings": []
+								},
+								"serverFarmId": "[concat('/subscriptions/', variables('subscriptionIdProd'),'/resourceGroups/', variables('resourceGroupName'), '/providers/Microsoft.Web/serverfarms/', variables('appServicePlanName'))]",
+								"hostingEnvironment": ""
+							},
+							"location": "[variables('priLocation')]",
+							"dependsOn": [
+								"[concat('Microsoft.Web/serverfarms/', variables('appServicePlanName'))]"
+							]
+						},
+						{
+							"condition": "[equals(parameters('appServiceOption'), 'Yes')]",
+							"apiVersion": "2015-08-01",
+							"name": "[variables('appServicePlanName')]",
+							"type": "Microsoft.Web/serverfarms",
+							"location": "[variables('priLocation')]",
+							"properties": {
+								"name": "[variables('appServicePlanName')]",
+								"workerSizeId": "0",
+								"reserved": false,
+								"numberOfWorkers": "1"
+							},
+							"sku": {
+								"name" : "[variables('appServicePlanSKUcode')]",
+								"tier": "[variables('appServicePlanSKU')]"
+							}
+						},
+						{
+							"condition": "[equals(parameters('appServiceOption'), 'Yes')]",
+							"apiVersion": "2016-08-01",
+							"type": "Microsoft.Web/sites/slots",
+							"name": "[concat(variables('appServiceName'), '/', variables('appServiceSlots')[copyIndex()])]",
+							"location": "[variables('priLocation')]",
+							"properties": {
+								"serverFarmId": "[concat('/subscriptions/', variables('subscriptionIdProd'),'/resourceGroups/', variables('resourceGroupName'), '/providers/Microsoft.Web/serverfarms/', variables('appServicePlanName'))]"
+							},
+							"dependsOn": [
+								"[concat('Microsoft.Web/serverfarms/', variables('appServicePlanName'))]",
+								"[resourceId('Microsoft.Web/sites',variables('appServiceName'))]"
+							],
+							"copy": {
+								"name": "webPortalSlot",
+								"count": "[length(variables('appServiceSlots'))]"
+							}		
+						},
+						{
+							"condition": "[equals(parameters('appServiceMobileOption'), 'Yes')]",
+							"apiVersion": "2016-03-01",
+							"name": "[variables('appServiceMobileName')]",
+							"type": "Microsoft.Web/sites",
+							"kind": "mobileapp",
+							"properties": {
+								"name": "[variables('appServiceMobileName')]",
+								"siteConfig": {
+									"appSettings": []
+								},
+								"serverFarmId": "[concat('/subscriptions/', variables('subscriptionIdProd'),'/resourceGroups/', variables('resourceGroupName'), '/providers/Microsoft.Web/serverfarms/', variables('appServiceMobilePlanName'))]",
+								"hostingEnvironment": ""
+							},
+							"location": "[variables('priLocation')]",
+							"dependsOn": [
+								"[concat('Microsoft.Web/serverfarms/', variables('appServiceMobilePlanName'))]"
+							]
+						},
+						{
+							"condition": "[equals(parameters('appServiceMobileOption'), 'Yes')]",
+							"apiVersion": "2015-08-01",
+							"name": "[variables('appServiceMobilePlanName')]",
+							"type": "Microsoft.Web/serverfarms",
+							"location": "[variables('priLocation')]",
+							"properties": {
+								"name": "[variables('appServiceMobilePlanName')]",
+								"workerSizeId": "0",
+								"reserved": false,
+								"numberOfWorkers": "1"
+							},
+							"sku": {
+								"name" : "[variables('appServiceMobilePlanSKUcode')]",
+								"tier": "[variables('appServiceMobilePlanSKU')]"
+							}
+						},
+						{
+							"condition": "[equals(parameters('appServiceMobileOption'), 'Yes')]",
+							"apiVersion": "2016-08-01",
+							"type": "Microsoft.Web/sites/slots",
+							"name": "[concat(variables('appServiceMobileName'), '/', variables('appServiceMobileSlots')[copyIndex()])]",
+							"location": "[variables('priLocation')]",
+							"properties": {
+								"serverFarmId": "[concat('/subscriptions/', variables('subscriptionIdProd'),'/resourceGroups/', variables('resourceGroupName'), '/providers/Microsoft.Web/serverfarms/', variables('appServiceMobilePlanName'))]"
+							},
+							"dependsOn": [
+								"[concat('Microsoft.Web/serverfarms/', variables('appServiceMobilePlanName'))]",
+								"[resourceId('Microsoft.Web/sites',variables('appServiceMobileName'))]"
+							],
+							"copy": {
+								"name": "webPortalSlot",
+								"count": "[length(variables('appServiceMobileSlots'))]"
+							}		
+						},
+						{
+							"condition": "[equals(parameters('sqlServerOption'), 'Yes')]",
+							"name": "[variables('sqlServerName')]",
+							"type": "Microsoft.Sql/servers",
+							"apiVersion": "2014-04-01-preview",
+							"location": "[variables('priLocation')]",
+							"properties": {
+								"administratorLogin": "[parameters('sqlAdministratorLogin')]",
+								"administratorLoginPassword": "[parameters('sqlAdministratorLoginPass')]"
+							},
+							"resources": [
+								{
+								  "condition": "[equals(parameters('sqlServerOption'), 'Yes')]",
+								  "name": "[variables('sqlDatabaseName')]",
+								  "type": "databases",
+								  "location": "[variables('priLocation')]",
+								  "apiVersion": "2015-01-01",
+								  "dependsOn": [
+									"[variables('sqlServerName')]"
+								  ],
+								  "properties": {
+									"edition": "Basic",
+									"requestedServiceObjectiveName": "Basic"
+								  }
+								},
+								{
+								"condition": "[equals(parameters('sqlServerOption'), 'Yes')]",
+								  "type": "firewallrules",
+								  "apiVersion": "2014-04-01",
+								  "dependsOn": [
+									"[variables('sqlServerName')]"
+								  ],
+								  "location": "[variables('priLocation')]",
+								  "name": "AllowAllWindowsAzureIps",
+								  "properties": {
+									"endIpAddress": "0.0.0.0",
+									"startIpAddress": "0.0.0.0"
+								  }
+								}
+							]
+						}
+					],
 				}
-			]
-		}
-	  
+			}
+	    }
 		
     ]
 }
