@@ -2,9 +2,6 @@
 	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
 	"contentVersion": "1.0.0.0",
 	"parameters": {
-			"resourceName": {
-				"type": "string"
-			},	
 			"ResourceGroupType": {
 				"type": "string",
 				"allowedValues": [
@@ -51,50 +48,27 @@
 		"priLocation": "UK West",
 		"secLocation": "UK South",
 		"unsupportedLocation": "West Europe",
-		"resourceGroupName": "[concat(parameters('resourceName'), '-', parameters('ResourceGroupType'), '-rg')]",
-		"appServiceMobileName": "[concat(parameters('resourceName'),'mobileapp', parameters('ResourceGroupType'))]",
-		"appServiceMobilePlanName": "[concat(parameters('resourceName'),'mobileasp', parameters('ResourceGroupType'))]",
+		"resourceGroupName": "resourceGroup().name",
+		"appServiceMobileName": "[concat(resourceGroup().name,'mobileapp', parameters('ResourceGroupType'))]",
+		"appServiceMobilePlanName": "[concat(resourceGroup().name,'mobileasp', parameters('ResourceGroupType'))]",
 		"appServiceMobilePlanSKU": "Standard",
 		"appServiceMobilePlanSKUcode": "S1",
 		"appServiceMobileSlots": [
 			"lastknowngood",
 			"staging"
 		],
-		"appServiceName": "[concat(parameters('resourceName'),'app', parameters('ResourceGroupType'))]",
-		"appServicePlanName": "[concat(parameters('resourceName'),'asp', parameters('ResourceGroupType'))]",
+		"appServiceName": "[concat(resourceGroup().name,'app', parameters('ResourceGroupType'))]",
+		"appServicePlanName": "[concat(resourceGroup().name,'asp', parameters('ResourceGroupType'))]",
 		"appServicePlanSKU": "Standard",
 		"appServicePlanSKUcode": "S1",
 		"appServiceSlots": [
 			"lastknowngood",
 			"staging"
 		],
-		"sqlServerName": "[toLower(concat(parameters('resourceName'),'sqlsvr', parameters('ResourceGroupType')))]",
-		"sqlDatabaseName": "[toLower(concat(parameters('resourceName'),'sqlsvrdb', parameters('ResourceGroupType')))]"
+		"sqlServerName": "[toLower(concat(resourceGroup().name,'sqlsvr', parameters('ResourceGroupType')))]",
+		"sqlDatabaseName": "[toLower(concat(resourceGroup().name,'sqlsvrdb', parameters('ResourceGroupType')))]"
 	},
 	"resources": [
-        {
-            "type": "Microsoft.Resources/resourceGroups",
-            "apiVersion": "2018-05-01",
-            "location": "[variables('priLocation')]",
-            "name": "[variables('resourceGroupName')]",
-            "properties": {}
-        },
-		{
-		    "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2017-05-10",
-            "name": "Deployment",
-            "resourceGroup": "[variables('resourceGroupName')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Resources/resourceGroups/', variables('resourceGroupName'))]"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "template": {
-                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-                    "contentVersion": "1.0.0.0",
-                    "parameters": {},
-                    "variables": {},
-                    "resources": [
 						{
 							"condition": "[equals(parameters('appServiceOption'), 'Yes')]",
 							"apiVersion": "2016-03-01",
@@ -105,7 +79,6 @@
 								"siteConfig": {
 									"appSettings": []
 								},
-								"serverFarmId": "[concat('/subscriptions/', variables('subscriptionIdProd'),'/resourceGroups/', variables('resourceGroupName'), '/providers/Microsoft.Web/serverfarms/', variables('appServicePlanName'))]",
 								"hostingEnvironment": ""
 							},
 							"location": "[variables('priLocation')]",
@@ -120,6 +93,7 @@
 							"type": "Microsoft.Web/serverfarms",
 							"location": "[variables('priLocation')]",
 							"properties": {
+								"serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]",
 								"name": "[variables('appServicePlanName')]",
 								"workerSizeId": "0",
 								"reserved": false,
@@ -137,11 +111,11 @@
 							"name": "[concat(variables('appServiceName'), '/', variables('appServiceSlots')[copyIndex()])]",
 							"location": "[variables('priLocation')]",
 							"properties": {
-								"serverFarmId": "[concat('/subscriptions/', variables('subscriptionIdProd'),'/resourceGroups/', variables('resourceGroupName'), '/providers/Microsoft.Web/serverfarms/', variables('appServicePlanName'))]"
+								"serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
 							},
 							"dependsOn": [
 								"[concat('Microsoft.Web/serverfarms/', variables('appServicePlanName'))]",
-								"[resourceId('Microsoft.Web/sites',variables('appServiceName'))]"
+								"[resourceId('Microsoft.Web/sites/', variables('appServiceName'))]"
 							],
 							"copy": {
 								"name": "webPortalSlot",
@@ -243,11 +217,5 @@
 								}
 							]
 						}
-					],
-                "outputs": {}
-				}
-			}
-	    }
-		
-    ]
+					]
 }
