@@ -74,11 +74,13 @@
 							"apiVersion": "2016-03-01",
 							"name": "[variables('appServiceName')]",
 							"type": "Microsoft.Web/sites",
+							"kind": "app",
 							"properties": {
 								"name": "[variables('appServiceName')]",
 								"siteConfig": {
 									"appSettings": []
 								},
+								"serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]",
 								"hostingEnvironment": ""
 							},
 							"location": "[variables('priLocation')]",
@@ -93,7 +95,6 @@
 							"type": "Microsoft.Web/serverfarms",
 							"location": "[variables('priLocation')]",
 							"properties": {
-								"serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]",
 								"name": "[variables('appServicePlanName')]",
 								"workerSizeId": "0",
 								"reserved": false,
@@ -115,12 +116,12 @@
 							},
 							"dependsOn": [
 								"[concat('Microsoft.Web/serverfarms/', variables('appServicePlanName'))]",
-								"[resourceId('Microsoft.Web/sites/', variables('appServiceName'))]"
+								"[resourceId('Microsoft.Web/sites',variables('appServiceName'))]"
 							],
 							"copy": {
 								"name": "webPortalSlot",
 								"count": "[length(variables('appServiceSlots'))]"
-							}		
+							}
 						},
 						{
 							"condition": "[equals(parameters('appServiceMobileOption'), 'Yes')]",
@@ -133,7 +134,7 @@
 								"siteConfig": {
 									"appSettings": []
 								},
-								"serverFarmId": "[concat('/subscriptions/', variables('subscriptionIdProd'),'/resourceGroups/', variables('resourceGroupName'), '/providers/Microsoft.Web/serverfarms/', variables('appServiceMobilePlanName'))]",
+								"serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServiceMobilePlanName'))]",
 								"hostingEnvironment": ""
 							},
 							"location": "[variables('priLocation')]",
@@ -165,7 +166,7 @@
 							"name": "[concat(variables('appServiceMobileName'), '/', variables('appServiceMobileSlots')[copyIndex()])]",
 							"location": "[variables('priLocation')]",
 							"properties": {
-								"serverFarmId": "[concat('/subscriptions/', variables('subscriptionIdProd'),'/resourceGroups/', variables('resourceGroupName'), '/providers/Microsoft.Web/serverfarms/', variables('appServiceMobilePlanName'))]"
+								"serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServiceMobilePlanName'))]"
 							},
 							"dependsOn": [
 								"[concat('Microsoft.Web/serverfarms/', variables('appServiceMobilePlanName'))]",
@@ -174,8 +175,16 @@
 							"copy": {
 								"name": "webPortalSlot",
 								"count": "[length(variables('appServiceMobileSlots'))]"
-							}		
+							}
 						},
+						
+						
+						
+						
+						
+						
+						
+						
 						{
 							"condition": "[equals(parameters('sqlServerOption'), 'Yes')]",
 							"name": "[variables('sqlServerName')]",
